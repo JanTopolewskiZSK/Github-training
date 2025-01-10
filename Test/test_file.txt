@@ -1,1 +1,2 @@
 Special text for the first test
+This is the second test of pull requests
