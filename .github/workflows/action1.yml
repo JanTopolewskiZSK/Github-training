@@ -1,18 +1,51 @@
 name: Learning GitHub Script
 on:
   issues:
-    types: [opened]
+    types: [opened]    
 jobs:
   comment:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/github-script@0.8.0
+    - uses: actions/github-script@v7
+      env:
+        PROJECT_ID: ${{ steps.get_project.outputs.result }}
       with:
-        github-token: ${{secrets.GITHUB_TOKEN}}
+        github-token: "${{ secrets.PERSONAL_TOKEN }}"
         script: |
-            github.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: "🎉 You've created this issue comment using GitHub Script!!!"
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "🎉 You've created this issue comment using GitHub Script!!!"
             });
+            const query = `
+              query {
+                user(login: "JanTopolewskiZSK") {
+                  projectV2(number: 5) {
+                    id
+                    title
+                  }
+                }
+              }
+            `;
+            const result = await github.graphql(query);
+            console.log("Full GraphQL response:", JSON.stringify(result, null, 2));
+            const projectId = result.user.projectV2.id;
+            const issueId = context.payload.issue.node_id;
+            
+            const mutation = `
+              mutation($projectId: ID!, $issueId: ID!) {
+                addProjectV2ItemById(input: {projectId: $projectId, contentId: $issueId}) {
+                  item {
+                    id
+                  }
+                }
+              }
+            `;
+
+            const result = await github.graphql(mutation, {
+              projectId,
+              issueId
+            });
+
+            console.log("✅ Added issue to project:", result.addProjectV2ItemById.item.id);
