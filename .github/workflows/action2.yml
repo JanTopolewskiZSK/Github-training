@@ -34,7 +34,7 @@ jobs:
             }
           `;
           const result = await github.graphql(query);
-          console.log("Project info:", result.user.projectV2);
+          console.log("Full GraphQL response:", JSON.stringify(result, null, 2));
           return result.user.projectV2.id;
 
     - name: Add issue to the project
