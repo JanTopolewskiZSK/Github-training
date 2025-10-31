@@ -24,19 +24,19 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
-          const query = `
+          const result = await github.graphql(`
             query {
               user(login: "JanTopolewskiZSK") {
-                projectV2(number: 3) {
-                  id
-                  title
+                projectsV2(first: 10) {
+                  nodes {
+                    number
+                    title
+                  }
                 }
               }
             }
-          `;
-          const result = await github.graphql(query);
-          console.log("Project info:", result.user.projectV2);
-          return result.user.projectV2.id;
+          `);
+          console.log(result.user.projectsV2.nodes);
 
     - name: Add issue to the project
       if: contains(github.event.issue.labels.*.name, 'bug')
