@@ -16,7 +16,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: "🎉 You've created this issue comment using GitHub Script!!!"
+              body: "🎉 You've created this issue comment using GitHub Script!!!!"
             });
             const query = `
               query {
@@ -28,7 +28,7 @@ jobs:
                 }
               }
             `;
-            const result = await github.graphql(query);
+            let result = await github.graphql(query);
             console.log("Full GraphQL response:", JSON.stringify(result, null, 2));
             const projectId = result.user.projectV2.id;
             const issueId = context.payload.issue.node_id;
