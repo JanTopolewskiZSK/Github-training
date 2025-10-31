@@ -26,7 +26,7 @@ jobs:
           const query = `
             query {
               user(login: "JanTopolewskiZSK") {
-                projectV2(number: 3) {
+                projectV2(number: 4) {
                   id
                   title
                 }
