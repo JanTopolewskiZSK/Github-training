@@ -17,14 +17,49 @@ jobs:
             repo: context.repo.repo,
             body: "🎉 You've created this issue comment using GitHub Script!!!"
             })
-    - name: Add issue to project board
+    - name: Get Project ID (for Projects v2)
       if: contains(github.event.issue.labels.*.name, 'bug')
-      uses: actions/github-script@0.8.0
+      id: get_project
+      uses: actions/github-script@v7
       with:
-        github-token: ${{secrets.GITHUB_TOKEN}}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
-            github.projects.createCard({
-            column_id: {{columnID}},
-            content_id: context.payload.issue.id,
-            content_type: "Issue"
-            });
+          const query = `
+            query {
+              user(login: "JanTopolewskiZSK") {
+                projectV2(number: 1) {
+                  id
+                  title
+                }
+              }
+            }
+          `;
+          const result = await github.graphql(query);
+          console.log("Project info:", result.user.projectV2);
+          return result.user.projectV2.id;
+
+    - name: Add issue to the project
+      if: contains(github.event.issue.labels.*.name, 'bug')
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const projectId = "${{ steps.get_project.outputs.result }}";
+          const issueId = context.payload.issue.node_id;
+
+          const mutation = `
+            mutation($projectId: ID!, $issueId: ID!) {
+              addProjectV2ItemById(input: {projectId: $projectId, contentId: $issueId}) {
+                item {
+                  id
+                }
+              }
+            }
+          `;
+
+          const result = await github.graphql(mutation, {
+            projectId,
+            issueId
+          });
+
+          console.log("✅ Added issue to project:", result.addProjectV2ItemById.item.id);
