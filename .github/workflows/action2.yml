@@ -18,25 +18,24 @@ jobs:
             body: "🎉 You've created this issue comment using GitHub Script!!!"
             })
     - name: Get Project ID (for Projects v2)
-      if: contains(github.event.issue.labels.*.name, 'bug')
       id: get_project
       uses: actions/github-script@v7
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
-          const result = await github.graphql(`
+          const query = `
             query {
               user(login: "JanTopolewskiZSK") {
-                projectsV2(first: 10) {
-                  nodes {
-                    number
-                    title
-                  }
+                projectV2(number: 3) {
+                  id
+                  title
                 }
               }
             }
-          `);
-          console.log(result.user.projectsV2.nodes);
+          `;
+          const result = await github.graphql(query);
+          console.log("Project info:", result.user.projectV2);
+          return result.user.projectV2.id;
 
     - name: Add issue to the project
       if: contains(github.event.issue.labels.*.name, 'bug')
