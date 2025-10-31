@@ -43,10 +43,12 @@ jobs:
     - name: Add issue to the project
       if: contains(github.event.issue.labels.*.name, 'bug')
       uses: actions/github-script@v7
+      env:
+        PROJECT_ID: ${{ steps.get_project.outputs.result }}
       with:
         github-token: "${{ secrets.PERSONAL_TOKEN }}"
         script: |
-          const projectId = "${{ steps.get_project.outputs.result }}";
+          const projectId = process.env.PROJECT_ID;;
           const issueId = context.payload.issue.node_id;
 
           const mutation = `
